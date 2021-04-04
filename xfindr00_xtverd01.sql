@@ -99,19 +99,6 @@ CREATE TABLE obdobi (
 );
 
 
-
--- clear tables to prevent duplicate values
-DELETE FROM uzivatel ;
-DELETE FROM host ;
-DELETE FROM pronajimatel ;
-DELETE FROM ubytovani;
-DELETE FROM rezervace;
-DELETE FROM obdobi;
-DELETE FROM doporuceni;
-DELETE FROM recenze;
-DELETE FROM pobyt;
-
-
 -- INITILIZE VALUES
 
 -- insert into uzivatel
@@ -127,10 +114,10 @@ INSERT INTO uzivatel VALUES (DEFAULT, 'Samuel', 'Čierny','8511250154', 'Jarná 
 INSERT INTO uzivatel VALUES (DEFAULT, 'Adam', 'Modrý','9702110253', 'Jesenná 585 Žilina', '421555444212');
 
 --insert into pronajimatel
-INSERT INTO pronajimatel VALUES (1, '', 'vyborna', 'minuty');
+INSERT INTO pronajimatel VALUES (1, 'ziadne', 'vyborna', 'minuty');
 INSERT INTO pronajimatel VALUES (2, 'kontaktovat skor vopred', 'nadpriemerna', 'hodiny');
-INSERT INTO pronajimatel VALUES (3, '', 'nizka', 'dni');
-INSERT INTO pronajimatel VALUES (4, '', 'priemerna', 'dni');
+INSERT INTO pronajimatel VALUES (3, 'ziadne', 'nizka', 'dni');
+INSERT INTO pronajimatel VALUES (4, 'ziadne', 'priemerna', 'dni');
 
 --insert into host
 INSERT INTO host VALUES (5, DATE '2010-10-10', 0, 'ne' );
@@ -142,8 +129,8 @@ INSERT INTO host VALUES (9, DATE '2016-05-17', 10, 'ne' );
 --insert into doporuceni
 INSERT INTO doporuceni VALUES (DEFAULT, 'hrad, kastiel, muzeum', 'plavaren', 'Cin-cin, Hradna r.', 'ziadne');
 INSERT INTO doporuceni VALUES (DEFAULT, 'pamatnik, park', 'lezecka stena, bangee-jump', 'Burger r., Kebab r.', 'Ford požičovňa');
-INSERT INTO doporuceni VALUES (DEFAULT, 'muzeum, hrad, bane', 'vystava umenia, ihrisko', 'Hodovna, Koliba', 'požičovňa suchy');
-INSERT INTO doporuceni VALUES (DEFAULT, 'hradby, hladomorna', 'plavaren, skokansky mostik', 'Pizzeria Lucccia, Kebab do ruky', 'Fiat požičovňa');
+INSERT INTO doporuceni VALUES (DEFAULT, 'muzeum, hrad, bane', 'vystava umenia, ihrisko', 'Hodovna, Koliba', 'požičovňa Suchy');
+INSERT INTO doporuceni VALUES (DEFAULT, 'hradby, hladomorna', 'plavaren, skokansky mostik', 'Pizzeria Luccia, Kebab do ruky', 'Fiat požičovňa');
 
 --insert into ubytovani
 INSERT INTO ubytovani VALUES (DEFAULT, 1, 'dom','15','žiadna', 'Česko','Praha','dlhy popis','izba(2x postel), kuchynka, kuplka','zakaz fajcit vnutri','hasiaci pristroj',1);
@@ -174,13 +161,3 @@ INSERT INTO pobyt VALUES (DEFAULT, 5, 1, DATE '2021-4-5', DATE '2021-4-8', 'kart
 INSERT INTO pobyt VALUES (DEFAULT, 5, 2, DATE '2021-10-1', DATE '2021-10-2', 'hotovosť', 'ano' );
 INSERT INTO pobyt VALUES (DEFAULT, 5, 2, DATE '2021-12-22', DATE '2022-1-2', 'šek', 'ano' );
 INSERT INTO pobyt VALUES (DEFAULT, 5, 2, DATE '2021-3-5', DATE '2021-3-8', 'ne', 'ne' );
-
-SELECT * FROM uzivatel;
-SELECT * FROM host;
-SELECT * FROM pronajimatel;
-SELECT * FROM ubytovani;
-SELECT * FROM rezervace;
-SELECT * FROM obdobi;
-SELECT * FROM doporuceni;
-SELECT * FROM recenze;
-SELECT * FROM pobyt;
