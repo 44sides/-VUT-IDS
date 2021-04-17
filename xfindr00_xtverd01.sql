@@ -2,6 +2,7 @@
 -- Michal Findra xfindr00
 -- Vladyslav Tverdokhlib xtverd01
 
+------- 2. část -------
 -- drop tables
 DROP TABLE doporuceni CASCADE CONSTRAINTS;
 DROP TABLE recenze CASCADE CONSTRAINTS;
@@ -126,7 +127,7 @@ INSERT INTO pronajimatel VALUES (3, 'ziadne', 'nizka', 'dni');
 INSERT INTO pronajimatel VALUES (4, 'ziadne', 'vyborna', 'dni');
 
 --insert into host
-INSERT INTO host VALUES (5, DATE '2010-10-10', 0, 'ne' );
+INSERT INTO host VALUES (5, DATE '2010-10-10', 1, 'ne' );
 INSERT INTO host VALUES (6, DATE '2018-01-06', 2, 'ne' );
 INSERT INTO host VALUES (7, DATE '2016-08-26', 5, 'ne' );
 INSERT INTO host VALUES (8, DATE '2020-12-23', 2, 'ne' );
@@ -160,7 +161,7 @@ INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-3-5', DATE '2021-3-8', 0, 4, 4);
 INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-3-9', DATE '2021-3-12', 0, 4, 5);
 
 --insert into recenze
-INSERT INTO recenze VALUES (DEFAULT, 1, 5, 'vyborne, som uplne spokojny', '10');
+INSERT INTO recenze VALUES (DEFAULT, 1, 5, 'vyborne, som uplne spokojny', '5');
 INSERT INTO recenze VALUES (DEFAULT, 2, 5, 'priemerne ubytovanie', '3');
 INSERT INTO recenze VALUES (DEFAULT, 5, 6, 'za tu cenu to nestoji', '2');
 INSERT INTO recenze VALUES (DEFAULT, 5, 7, 'byla to nezapomenutelná párty a vila byla na to ideální', '10');
@@ -171,54 +172,124 @@ INSERT INTO pobyt VALUES (DEFAULT, 5, 2, DATE '2021-10-1', DATE '2021-10-2', 'ho
 INSERT INTO pobyt VALUES (DEFAULT, 6, 2, DATE '2021-12-22', DATE '2022-1-2', 'šek', 'ano' );
 INSERT INTO pobyt VALUES (DEFAULT, 7, 2, DATE '2021-3-5', DATE '2021-3-8', 'ne', 'ne' );
 
--- 3. část
+------- 3. část -------
 -- SQL skript obsahující dotazy SELECT musí obsahovat konkrétně alespoň 
 
 -- DVA DOTAZY VYUŽÍVAJÍCÍ SPOJENÍ DVOU TABULEK
 -- 1. všetky absolvované pobyty uživateľa Ján Novák 
-SELECT U.jmeno, U.prijmeni, P.*
-FROM pobyt P left JOIN uzivatel U on P.host=U.ucet_id
-WHERE U.jmeno='Jan' AND U.prijmeni='Novák';
+SELECT
+    u.jmeno,
+    u.prijmeni,
+    p.*
+FROM
+    pobyt     p
+    LEFT JOIN uzivatel  u ON p.host = u.ucet_id
+WHERE
+        u.jmeno = 'Jan'
+    AND u.prijmeni = 'Novák';
 
 -- 2. Mená hostí ktorí nechali horšiu recenziu ako 5
-SELECT DISTINCT U.jmeno, U.prijmeni, R.ubytovani, R.hodnoceni
-FROM recenze R left join uzivatel U ON R.host=U.ucet_id
-WHERE R.hodnoceni<6;
+SELECT DISTINCT
+    u.jmeno,
+    u.prijmeni,
+    r.ubytovani,
+    r.hodnoceni
+FROM
+    recenze   r
+    LEFT JOIN uzivatel  u ON r.host = u.ucet_id
+WHERE
+    r.hodnoceni < 6;
 
 -- JEDEN VYUŽÍVAJÍCÍ SPOJENÍ TŘÍ TABULEK
 -- 3. mená všetkych prenajimatelov, ktorí majú ubytovanie na Slovensku a zaroven maju vybornu reputáciu
-SELECT DISTINCT UZ.jmeno, UZ.prijmeni, P.reputace, U.zeme
-FROM pronajimatel P JOIN uzivatel UZ  ON P.uzivatel=UZ.ucet_id 
-					JOIN ubytovani U ON P.uzivatel=U.pronajimatel and U.zeme = 'Slovensko' 
-WHERE  P.reputace = 'vyborna';
+SELECT DISTINCT
+    uz.jmeno,
+    uz.prijmeni,
+    p.reputace,
+    u.zeme
+FROM
+         pronajimatel p
+    JOIN uzivatel   uz ON p.uzivatel = uz.ucet_id
+    JOIN ubytovani  u ON p.uzivatel = u.pronajimatel
+                        AND u.zeme = 'Slovensko'
+WHERE
+    p.reputace = 'vyborna';
 
 -- DVA DOTAZY S KLAUZULÍ GROUP BY A AGREGAČNÍ FUNKCÍ
 -- 4. počet ubytovani ponukaných jednotlivymi pronajimateli 
 -- (sposob s vytvoerním tabuľky cez príkaz WITH)
-WITH named_pronajimatel as(
-	SELECT UZ.jmeno, UZ.prijmeni, P.uzivatel
-	FROM pronajimatel P join uzivatel UZ ON P.uzivatel=UZ.ucet_id
+WITH named_pronajimatel AS (
+    SELECT
+        uz.jmeno,
+        uz.prijmeni,
+        p.uzivatel
+    FROM
+             pronajimatel p
+        JOIN uzivatel uz ON p.uzivatel = uz.ucet_id
 )
-SELECT jmeno, prijmeni, uzivatel, COUNT(U.pronajimatel) pocet_ponuknych_ubytovani
-FROM named_pronajimatel left JOIN ubytovani U on uzivatel=U.pronajimatel
-GROUP BY jmeno, prijmeni,  uzivatel;
+SELECT
+    jmeno,
+    prijmeni,
+    uzivatel,
+    COUNT(u.pronajimatel) pocet_ponuknych_ubytovani
+FROM
+    named_pronajimatel
+    LEFT JOIN ubytovani u ON uzivatel = u.pronajimatel
+GROUP BY
+    jmeno,
+    prijmeni,
+    uzivatel;
 
 -- 5. priemerna hodnota ceny za jednu noc jednotlivých pronjimatelov
-SELECT UZ.jmeno, UZ.prijmeni, U.pronajimatel, AVG(U.cena_za_noc) prumerna_cena_pronajimatele
-FROM ubytovani U join  uzivatel UZ on U.pronajimatel=UZ.ucet_id
-GROUP BY UZ.jmeno, UZ.prijmeni, U.pronajimatel;
+SELECT
+    uz.jmeno,
+    uz.prijmeni,
+    u.pronajimatel,
+    AVG(u.cena_za_noc) prumerna_cena_pronajimatele
+FROM
+         ubytovani u
+    JOIN uzivatel uz ON u.pronajimatel = uz.ucet_id
+GROUP BY
+    uz.jmeno,
+    uz.prijmeni,
+    u.pronajimatel;
 
 -- JEDEN DOTAZ OBSAHUJÍCÍ PREDIKÁT EXISTS 
--- 6. všetky ubytovanie, ktoré maju v doporucaniach autopujčovnu
-SELECT * 
-FROM ubytovani U 
-WHERE EXISTS (
-	SELECT *
-	FROM doporuceni D 
-	WHERE U.doporuceni=D.doporuceni_id AND D.autopujcovny IS NOT NULL)
+-- 6. všetky ubytovania, ktoré maju v doporucaniach autopujčovnu
+SELECT
+    *
+FROM
+    ubytovani u
+WHERE
+    EXISTS (
+        SELECT
+            *
+        FROM
+            doporuceni d
+        WHERE
+                u.doporuceni = d.doporuceni_id
+            AND d.autopujcovny IS NOT NULL
+    );
 
 -- JEDEN DOTAZ S PREDIKÁTEM IN S VNOŘENÝM SELECTEM (NIKOLIV IN S MNOŽINOU KONSTANTNÍCH DAT).
--- 7 .
+-- 7 . všetci uživatelia, ktorých premierná hodnota recenzii je menšia ako 5
+
+SELECT DISTINCT
+    uz.jmeno,
+    uz.prijmeni
+FROM
+         host h
+    JOIN uzivatel uz ON h.uzivatel = uz.ucet_id
+WHERE
+    h.uzivatel IN (
+        SELECT
+            r.host
+        FROM
+            recenze r
+        GROUP BY
+            r.host
+        HAVING
+            AVG(r.hodnoceni) < 5
+    );
 
 -- U každého z dotazů musí být (v komentáři SQL kódu) popsáno srozumitelně, jaká data hledá daný dotaz (jaká je jeho funkce v aplikaci).
-
