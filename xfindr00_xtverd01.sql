@@ -176,10 +176,11 @@ INSERT INTO pobyt VALUES (DEFAULT, 7, 2, DATE '2021-3-5', DATE '2021-3-8', 'ne',
 -- SQL skript obsahující dotazy SELECT musí obsahovat konkrétně alespoň 
 
 -- DVA DOTAZY VYUŽÍVAJÍCÍ SPOJENÍ DVOU TABULEK
--- 1. všetky pobyty uživateľa Ján Novák 
+-- 1. všetky pobyty užívateľov s menom Ján Novák 
 SELECT
     u.jmeno,
     u.prijmeni,
+    u.rc,
     p.*
 FROM
     pobyt     p
@@ -292,4 +293,29 @@ WHERE
             AVG(r.hodnoceni) < 5
     );
 
+/*
+SELECT
+    uz.jmeno,
+    uz.prijmeni,
+    AVG(r.hodnoceni) premierna_hodnota
+FROM
+         host h
+    JOIN uzivatel uz ON h.uzivatel = uz.ucet_id
+    JOIN recenze r ON h.uzivatel = r.host
+WHERE
+    h.uzivatel IN (
+        SELECT
+            r.host
+        FROM
+            recenze r
+        GROUP BY
+            r.host
+        HAVING
+            AVG(r.hodnoceni) < 5
+    )
+GROUP BY
+    uz.jmeno,
+    uz.prijmeni;
+*/
+	       
 -- U každého z dotazů musí být (v komentáři SQL kódu) popsáno srozumitelně, jaká data hledá daný dotaz (jaká je jeho funkce v aplikaci).
