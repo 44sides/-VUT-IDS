@@ -273,31 +273,12 @@ WHERE
     );
 
 -- JEDEN DOTAZ S PREDIKÁTEM IN S VNOŘENÝM SELECTEM (NIKOLIV IN S MNOŽINOU KONSTANTNÍCH DAT).
--- 7 . všetci uživatelia, ktorých premierná hodnota recenzii je menšia ako 5
+-- 7 . všetci uživatelia, ktorých priemerná hodnota recenzii ubytovaní je menšia ako 5
 
-SELECT DISTINCT
-    uz.jmeno,
-    uz.prijmeni
-FROM
-         host h
-    JOIN uzivatel uz ON h.uzivatel = uz.ucet_id
-WHERE
-    h.uzivatel IN (
-        SELECT
-            r.host
-        FROM
-            recenze r
-        GROUP BY
-            r.host
-        HAVING
-            AVG(r.hodnoceni) < 5
-    );
-
-/*
 SELECT
     uz.jmeno,
     uz.prijmeni,
-    AVG(r.hodnoceni) premierna_hodnota
+    AVG(r.hodnoceni) priemerna_hodnota
 FROM
          host h
     JOIN uzivatel uz ON h.uzivatel = uz.ucet_id
@@ -316,6 +297,4 @@ WHERE
 GROUP BY
     uz.jmeno,
     uz.prijmeni;
-*/
-	       
--- U každého z dotazů musí být (v komentáři SQL kódu) popsáno srozumitelně, jaká data hledá daný dotaz (jaká je jeho funkce v aplikaci).
+	    
