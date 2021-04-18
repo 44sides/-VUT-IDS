@@ -176,7 +176,7 @@ INSERT INTO pobyt VALUES (DEFAULT, 7, 2, DATE '2021-3-5', DATE '2021-3-8', 'ne',
 -- SQL skript obsahující dotazy SELECT musí obsahovat konkrétně alespoň 
 
 -- DVA DOTAZY VYUŽÍVAJÍCÍ SPOJENÍ DVOU TABULEK
--- 1. všetky absolvované pobyty uživateľa Ján Novák 
+-- 1. všetky pobyty uživateľa Ján Novák 
 SELECT
     u.jmeno,
     u.prijmeni,
@@ -188,7 +188,7 @@ WHERE
         u.jmeno = 'Jan'
     AND u.prijmeni = 'Novák';
 
--- 2. Mená hostí ktorí nechali horšiu recenziu ako 5
+-- 2. Mená hostí a ubytovanie, kde nechali horšiu recenziu ako 5
 SELECT DISTINCT
     u.jmeno,
     u.prijmeni,
@@ -201,7 +201,7 @@ WHERE
     r.hodnoceni < 6;
 
 -- JEDEN VYUŽÍVAJÍCÍ SPOJENÍ TŘÍ TABULEK
--- 3. mená všetkych prenajimatelov, ktorí majú ubytovanie na Slovensku a zaroven maju vybornu reputáciu
+-- 3. mená všetkych prenajimatelov, ktorí majú ubytovanie na Slovensku a zároveň majú výbornú reputáciu
 SELECT DISTINCT
     uz.jmeno,
     uz.prijmeni,
@@ -216,8 +216,8 @@ WHERE
     p.reputace = 'vyborna';
 
 -- DVA DOTAZY S KLAUZULÍ GROUP BY A AGREGAČNÍ FUNKCÍ
--- 4. počet ubytovani ponukaných jednotlivymi pronajimateli 
--- (sposob s vytvoerním tabuľky cez príkaz WITH)
+-- 4. počet ubytovaní ponukaných jednotlivymi pronajimateli 
+-- (sposob s vytvorením tabuľky cez príkaz WITH)
 WITH named_pronajimatel AS (
     SELECT
         uz.jmeno,
@@ -240,7 +240,7 @@ GROUP BY
     prijmeni,
     uzivatel;
 
--- 5. priemerna hodnota ceny za jednu noc jednotlivých pronjimatelov
+-- 5. priemerná hodnota ceny za jednu noc jednotlivých pronjimatelov
 SELECT
     uz.jmeno,
     uz.prijmeni,
