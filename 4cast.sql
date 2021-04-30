@@ -160,11 +160,13 @@ INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-12-22', DATE '2022-1-2', 0, 3, 5)
 INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-3-5', DATE '2021-3-8', 0, 4, 4);
 INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-3-9', DATE '2021-3-12', 0, 4, 5);
 
---insert into recenze
-INSERT INTO recenze VALUES (DEFAULT, 1, 5, 'vyborne, som uplne spokojny', '5');
-INSERT INTO recenze VALUES (DEFAULT, 2, 5, 'priemerne ubytovanie', '3');
-INSERT INTO recenze VALUES (DEFAULT, 5, 6, 'za tu cenu to nestoji', '2');
-INSERT INTO recenze VALUES (DEFAULT, 5, 7, 'byla to nezapomenutelná párty a vila byla na to ideální', '10');
+--insert into recenze	       
+select uzivatel, overeny_uzivatel from host; --seznam vsech hostu.
+INSERT INTO recenze VALUES (DEFAULT, 1, 5, 'vyborne, som uplne spokojny', '5'); -- komentar od overeneho hosta.
+INSERT INTO recenze VALUES (DEFAULT, 2, 5, 'priemerne ubytovanie', '3'); -- komentar od overeneho hosta.
+INSERT INTO recenze VALUES (DEFAULT, 5, 6, 'za tu cenu to nestoji', '2'); -- komentar od overeneho hosta.
+INSERT INTO recenze VALUES (DEFAULT, 5, 7, 'byla to nezapomenutelná párty a vila byla na to ideální', '10'); -- komentar od neovereneho hosta. Komentar bude vynulovan.
+select host, komentar from recenze; -- seznam vsech komentaru.
 
 --insert into pobyt
 INSERT INTO pobyt VALUES (DEFAULT, 5, 1, DATE '2021-4-5', DATE '2021-4-8', 'kartou', 'ano' );
@@ -173,6 +175,38 @@ INSERT INTO pobyt VALUES (DEFAULT, 6, 2, DATE '2021-12-22', DATE '2022-1-2', 'š
 INSERT INTO pobyt VALUES (DEFAULT, 7, 2, DATE '2021-3-5', DATE '2021-3-8', 'ne', 'ne' );
 
 ------- 4. část -------
+	       
+-- DVA TRIGGERY
+-- trigger pro automaticke generovani hodnot PK uzivatele.
+CREATE SEQUENCE uzivatel_seq
+START WITH 1;
+
+CREATE OR REPLACE TRIGGER uzivatel_gen_PK
+BEFORE INSERT ON uzivatel
+FOR EACH ROW
+BEGIN
+:new.ucet_id := uzivatel_seq.nextval;
+END uzivatel_gen_PK;
+/
+	       
+-- trigger pro komentare. Komentar od neovereneho hosta nebude prijat a vynuluje se.
+CREATE OR REPLACE TRIGGER recenze_komentar_integrity
+BEFORE INSERT ON recenze
+FOR EACH ROW
+declare status varchar(3);
+BEGIN
+IF (:new.komentar IS NOT NULL) THEN
+select distinct overeny_uzivatel into status FROM host WHERE uzivatel = :new.host;
+if status = 'ne' then
+:new.komentar := NULL;
+end if;
+END IF;
+END recenze_komentar_integrity;
+/
+	       
+-- DVE PROCEDURY
+-- 
+	       
 /* dokumentace link: https://www.overleaf.com/2176643837xxcrwtmhwxzs */
 
 /*
@@ -182,14 +216,9 @@ Zadanie:
     a poté zadefinuje či vytvoří pokročilá omezení či objekty databáze dle upřesňujících požadavků zadání.
     Dále skript bude obsahovat ukázkové příkazy manipulace dat a dotazy demonstrující použití výše zmiňovaných 
     omezení a objektů tohoto skriptu (např. pro demonstraci použití indexů zavolá nejprve skript EXPLAIN PLAN na dotaz 
-    bez indexu, poté vytvoří index, a nakonec zavolá EXPLAIN PLAN na dotaz s indexem; pro demostranci databázového triggeru
-    se provede manipulace s daty, která vyvolá daný trigger; atp.).
+    bez indexu, poté vytvoří index, a nakonec zavolá EXPLAIN PLAN na dotaz s indexem).
 
 SQL skript v poslední části projektu musí obsahovat vše z následujících
-
-    vytvoření alespoň dvou netriviálních databázových triggerů vč. jejich předvedení, z toho právě jeden trigger pro automatické 
-    generování hotnot primárního klíče nějaké tabulky ze sekvence (např. pokud bude při vkládání záznamů do dané tabulky hodnota 
-    primárního klíče nedefinována, tj. NULL),
 
     vytvoření alespoň dvou netriviálních uložených procedur vč. jejich předvedení, 
     ve kterých se musí (dohromady) vyskytovat alespoň jednou kurzor, ošetření výjimek a použití proměnné s datovým typem 
