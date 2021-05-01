@@ -8,6 +8,7 @@ DROP TRIGGER recenze_komentar_integrity;
 
 -- drop procedures
 DROP PROCEDURE nejdrazsi_pobyt_hostu;
+DROP PROCEDURE discount_application;
 
 -- drop sequences
 DROP SEQUENCE uzivatel_seq;
@@ -26,6 +27,8 @@ DROP TABLE host CASCADE CONSTRAINTS;
 DROP TABLE uzivatel CASCADE CONSTRAINTS;
 DROP TABLE pronajimatel CASCADE CONSTRAINTS;
 DROP TABLE ubytovani CASCADE CONSTRAINTS;
+
+SET serveroutput ON;
 
 -- create tables
 CREATE TABLE uzivatel (
@@ -148,7 +151,6 @@ END recenze_komentar_integrity;
 /
 
 -- DVE PROCEDURY
-SET serveroutput ON;
 -- Nejdrazsi pobyt urciteho hostu, ktery se uskutecnil.
 CREATE OR REPLACE PROCEDURE nejdrazsi_pobyt_hostu (host_id in INT)
     IS 
@@ -160,7 +162,7 @@ CREATE OR REPLACE PROCEDURE nejdrazsi_pobyt_hostu (host_id in INT)
     koncova_cena NUMBER;
     max_cena NUMBER;
     max_pobyt INT;
-    host_check INT;
+    host_check SMALLINT;
     host_error exception;
     pobyt_error exception;
 BEGIN
@@ -186,8 +188,8 @@ BEGIN
     end if;
     
     END LOOP;
-    
     CLOSE kurz;
+    
     IF max_cena = 0 THEN
     RAISE pobyt_error;
     END IF;
@@ -198,14 +200,64 @@ BEGIN
     WHEN host_error THEN
         dbms_output.put_line('CHYBA: Host s danym ID neexistuje.');
     WHEN pobyt_error THEN
-        dbms_output.put_line('CHYBA: Host nema pobyty, ktere se uskutecnily');
+        dbms_output.put_line('CHYBA: Host nema pobyty, ktere se uskutecnily.');
     WHEN OTHERS THEN
         dbms_output.put_line('CHYBA: Ostatni chyba.');
 END;
 /
 
--- ----------------
+-- Aplikace procentni slevy k urcite sume rezervace s aktualizaci dat.
+CREATE OR REPLACE PROCEDURE discount_application(rez_id in INT, procento rezervace.suma%TYPE)
+    IS 
+    CURSOR kurz IS SELECT suma from rezervace where rezervace_id = rez_id;
+    CURSOR kurz2 IS SELECT sleva from obdobi where rezervace_num = rez_id; 
+    kurzrow kurz%ROWTYPE;
+    kurzrow2 kurz2%ROWTYPE;
+    vysledna_suma NUMBER;
+    nova_sleva NUMBER;
+    percent_range exception;
+    rez_id_check smallint;
+    rez_id_error exception;
+BEGIN
+    IF procento < 0 OR procento > 100 THEN
+    RAISE percent_range;
+    END IF;
+    
+    select count(rezervace_id) into rez_id_check from rezervace where rez_id = rezervace_id;
+    IF rez_id_check = 0 THEN
+    RAISE rez_id_error;
+    END IF;
 
+    OPEN kurz;
+    FETCH kurz INTO kurzrow;
+    
+    vysledna_suma := kurzrow.suma * (1 - procento / 100);
+    
+    OPEN kurz2;
+    FETCH kurz2 INTO kurzrow2;
+    
+    nova_sleva := kurzrow.suma - vysledna_suma + kurzrow2.sleva;
+    
+    CLOSE kurz2;
+    CLOSE kurz;
+
+    UPDATE rezervace
+    SET suma = vysledna_suma
+    WHERE rezervace_id = rez_id;
+    
+    UPDATE obdobi
+    SET sleva = nova_sleva
+    WHERE rezervace_num = rez_id;
+
+    EXCEPTION
+    WHEN percent_range THEN
+        dbms_output.put_line('CHYBA: Chybna hodnota procenta.');
+    WHEN rez_id_error THEN
+       dbms_output.put_line('CHYBA: Rezervace s danym ID neexistuje.');
+    WHEN OTHERS THEN
+        dbms_output.put_line('CHYBA: Ostatni chyba.');
+END;
+/
 
 -- INITILIZE VALUES
 
@@ -261,6 +313,16 @@ INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-10-1', DATE '2021-10-2', 10, 2, 2
 INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-12-22', DATE '2022-1-1', 0, 3, 5);
 INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-3-5', DATE '2021-3-8', 0, 4, 4);
 INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-3-9', DATE '2021-3-12', 0, 4, 5);
+-- aplikace slevy 50% k rezervaci 2.
+--exec discount_application(2, 50);
+--select distinct r.rezervace_id, r.suma, o.sleva from rezervace r LEFT JOIN obdobi o on r.rezervace_id = o.rezervace_num where r.rezervace_id = 2; -- Sleva je aplikovana a hodnota slevy je aktualizovana.
+ -- aplikace slevy 13.5% k rezervaci 4.
+--exec discount_application(4, '13,5');
+--select distinct r.rezervace_id, r.suma, o.sleva from rezervace r LEFT JOIN obdobi o on r.rezervace_id = o.rezervace_num where r.rezervace_id = 4; -- Sleva je aplikovana a hodnota slevy je nastavena.
+--CHYBA: Chybna hodnota procenta--
+--exec discount_application(2, 150);
+--CHYBA: Rezervace s danym ID neexistuje--
+--exec discount_application(55, 15);
 
 --insert into recenze	       
 --select uzivatel, overeny_uzivatel from host; --seznam vsech hostu.
@@ -273,16 +335,16 @@ INSERT INTO recenze VALUES (DEFAULT, 5, 7, 'byla to nezapomenutelná párty a vi
 --insert into pobyt
 INSERT INTO pobyt VALUES (DEFAULT, 5, 1, DATE '2021-4-5', DATE '2021-4-8', 'kartou', 'ano' ); -- host 5. (47.25). Drazsi pobyt. 
 INSERT INTO pobyt VALUES (DEFAULT, 5, 2, DATE '2021-10-1', DATE '2021-10-2', 'hotovosť', 'ano' ); -- host 5. (40).
-exec  nejdrazsi_pobyt_hostu(5);
+--exec  nejdrazsi_pobyt_hostu(5);
 INSERT INTO pobyt VALUES (DEFAULT, 6, 5, DATE '2021-12-22', DATE '2022-1-1', 'šek', 'ano' ); -- host 6 ma jeden pobyt.
 
 INSERT INTO pobyt VALUES (DEFAULT, 7, 4, DATE '2021-3-5', DATE '2021-3-8', 'ne', 'ano' ); -- host 7. (600). Drazsi pobyt, protoze se uskutecnil.
 INSERT INTO pobyt VALUES (DEFAULT, 7, 5, DATE '2021-3-9', DATE '2021-3-12', 'kartou', 'ne' ); -- host 7. (1500).
-exec  nejdrazsi_pobyt_hostu(7);
+--exec  nejdrazsi_pobyt_hostu(7);
 --CHYBA: Host nema pobyty, ktere se uskutecnily--
-exec  nejdrazsi_pobyt_hostu(9);
+--exec  nejdrazsi_pobyt_hostu(9);
 --CHYBA: Host s danym ID neexistuje--ID patri pronajimateli.
-exec  nejdrazsi_pobyt_hostu(1);
+--exec  nejdrazsi_pobyt_hostu(1);
 
 /* dokumentace link: https://www.overleaf.com/2176643837xxcrwtmhwxzs */
 
@@ -296,10 +358,6 @@ Zadanie:
     bez indexu, poté vytvoří index, a nakonec zavolá EXPLAIN PLAN na dotaz s indexem).
 
 SQL skript v poslední části projektu musí obsahovat vše z následujících
-
-    vytvoření alespoň dvou netriviálních uložených procedur vč. jejich předvedení, 
-    ve kterých se musí (dohromady) vyskytovat alespoň jednou kurzor, ošetření výjimek a použití proměnné s datovým typem 
-    odkazujícím se na řádek či typ sloupce tabulky (table_name.column_name%TYPE nebo table_name%ROWTYPE),
 
     explicitní vytvoření alespoň jednoho indexu tak, aby pomohl optimalizovat zpracování dotazů, přičemž musí být uveden 
     také příslušný dotaz, na který má index vliv, a v dokumentaci popsán způsob využití indexu v tomto dotazy 
@@ -320,9 +378,6 @@ SQL skript v poslední části projektu musí obsahovat vše z následujících
 5. Dokumentace popisující finální schéma databáze – Dokumentace popisující řešení ze skriptu v bodě 4 vč. jejich zdůvodnění 
     (např. popisuje výstup příkazu EXPLAIN PLAN bez indexu, důvod vytvoření zvoleného indexu, a výstup EXPLAIN PLAN s indexem, atd.).
 */
-
-
-
 
 -- udelenie opravnení od autora tabuliek va databáze (xfindr00) pre druhého člena týmu (xtverd01)
 GRANT ALL ON recenze TO xtverd01;
