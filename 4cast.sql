@@ -9,6 +9,9 @@ DROP TRIGGER recenze_komentar_integrity;
 -- drop sequences
 DROP SEQUENCE uzivatel_seq;
 
+-- drop materialized view
+DROP MATERIALIZED VIEW zeme_sk;
+
 ------- 2. část -------
 -- drop tables
 DROP TABLE doporuceni CASCADE CONSTRAINTS;
@@ -142,9 +145,7 @@ END IF;
 END recenze_komentar_integrity;
 /
 
--- DVE PROCEDURY
--- 
-	       
+
 
 -- INITILIZE VALUES
 
@@ -252,6 +253,9 @@ SQL skript v poslední části projektu musí obsahovat vše z následujících
     (např. popisuje výstup příkazu EXPLAIN PLAN bez indexu, důvod vytvoření zvoleného indexu, a výstup EXPLAIN PLAN s indexem, atd.).
 */
 
+
+
+
 -- udelenie opravnení od autora tabuliek va databáze (xfindr00) pre druhého člena týmu (xtverd01)
 GRANT ALL ON recenze TO xtverd01;
 GRANT ALL ON obdobi TO xtverd01;
@@ -262,4 +266,10 @@ GRANT ALL ON uzivatel TO xtverd01;
 GRANT ALL ON pronajimatel TO xtverd01;
 GRANT ALL ON ubytovani TO xtverd01;
 
+
 --materialized view
+CREATE MATERIALIZED VIEW zeme_sk AS 
+	SELECT *
+    	FROM ubytovani U WHERE U.zeme = 'Slovensko';
+
+GRANT ALL ON zeme_sk TO xtverd01;
