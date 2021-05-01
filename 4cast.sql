@@ -2,6 +2,13 @@
 -- Michal Findra xfindr00
 -- Vladyslav Tverdokhlib xtverd01
 
+-- drop triggers
+DROP TRIGGER uzivatel_gen_PK;
+DROP TRIGGER recenze_komentar_integrity;
+
+-- drop sequences
+DROP SEQUENCE uzivatel_seq;
+
 ------- 2. část -------
 -- drop tables
 DROP TABLE doporuceni CASCADE CONSTRAINTS;
@@ -105,6 +112,39 @@ CREATE TABLE obdobi (
 	CHECK (sleva >= 0)
 );
 
+------- 4. část -------
+
+-- DVA TRIGGERY
+-- trigger pro automaticke generovani hodnot PK uzivatele.
+CREATE SEQUENCE uzivatel_seq
+START WITH 1;
+
+CREATE OR REPLACE TRIGGER uzivatel_gen_PK
+BEFORE INSERT ON uzivatel
+FOR EACH ROW
+BEGIN
+:new.ucet_id := uzivatel_seq.nextval;
+END uzivatel_gen_PK;
+/
+	       
+-- trigger pro komentare. Komentar od neovereneho hosta nebude prijat a vynuluje se.
+CREATE OR REPLACE TRIGGER recenze_komentar_integrity
+BEFORE INSERT ON recenze
+FOR EACH ROW
+declare status varchar(3);
+BEGIN
+IF (:new.komentar IS NOT NULL) THEN
+select distinct overeny_uzivatel into status FROM host WHERE uzivatel = :new.host;
+if status = 'ne' then
+:new.komentar := NULL;
+end if;
+END IF;
+END recenze_komentar_integrity;
+/
+
+-- DVE PROCEDURY
+-- 
+	       
 
 -- INITILIZE VALUES
 
@@ -116,10 +156,11 @@ INSERT INTO uzivatel VALUES (DEFAULT, 'Igor', 'Mokrý','6408140079', 'Športová
 
 INSERT INTO uzivatel VALUES (DEFAULT, 'Jan', 'Novák','520606007', 'Lesná 665 Letanovce', '421555222555');
 INSERT INTO uzivatel VALUES (DEFAULT, 'Jerguš', 'Chudobný','420213008', 'Mestská 222 Kežmarok', '421111444777');
-INSERT INTO uzivatel VALUES (DEFAULT, 'Ivan', 'Bohatý','340608010', 'Jarná 8 Prešov', '420999666333');
+INSERT INTO uzivatel VALUES (15, 'Ivan', 'Bohatý','340608010', 'Jarná 8 Prešov', '420999666333'); -- id ma byt 7 diky triggeru
 INSERT INTO uzivatel VALUES (DEFAULT, 'Samuel', 'Čierny','8511250154', 'Jarná 8 Prešov', '420111222111');
 INSERT INTO uzivatel VALUES (DEFAULT, 'Adam', 'Modrý','9702110253', 'Jesenná 585 Žilina', '421555444212');
-
+select ucet_id from uzivatel;
+	       
 --insert into pronajimatel
 INSERT INTO pronajimatel VALUES (1, 'ziadne', 'vyborna', 'minuty');
 INSERT INTO pronajimatel VALUES (2, 'kontaktovat skor vopred', 'nadpriemerna', 'hodiny');
@@ -127,8 +168,8 @@ INSERT INTO pronajimatel VALUES (3, 'ziadne', 'nizka', 'dni');
 INSERT INTO pronajimatel VALUES (4, 'ziadne', 'vyborna', 'dni');
 
 --insert into host
-INSERT INTO host VALUES (5, DATE '2010-10-10', 1, 'ne' );
-INSERT INTO host VALUES (6, DATE '2018-01-06', 2, 'ne' );
+INSERT INTO host VALUES (5, DATE '2010-10-10', 1, 'ano' );
+INSERT INTO host VALUES (6, DATE '2018-01-06', 2, 'ano' );
 INSERT INTO host VALUES (7, DATE '2016-08-26', 5, 'ne' );
 INSERT INTO host VALUES (8, DATE '2020-12-23', 2, 'ne' );
 INSERT INTO host VALUES (9, DATE '2016-05-17', 10, 'ano' );
@@ -173,39 +214,6 @@ INSERT INTO pobyt VALUES (DEFAULT, 5, 1, DATE '2021-4-5', DATE '2021-4-8', 'kart
 INSERT INTO pobyt VALUES (DEFAULT, 5, 2, DATE '2021-10-1', DATE '2021-10-2', 'hotovosť', 'ano' );
 INSERT INTO pobyt VALUES (DEFAULT, 6, 2, DATE '2021-12-22', DATE '2022-1-2', 'šek', 'ano' );
 INSERT INTO pobyt VALUES (DEFAULT, 7, 2, DATE '2021-3-5', DATE '2021-3-8', 'ne', 'ne' );
-
-------- 4. část -------
-	       
--- DVA TRIGGERY
--- trigger pro automaticke generovani hodnot PK uzivatele.
-CREATE SEQUENCE uzivatel_seq
-START WITH 1;
-
-CREATE OR REPLACE TRIGGER uzivatel_gen_PK
-BEFORE INSERT ON uzivatel
-FOR EACH ROW
-BEGIN
-:new.ucet_id := uzivatel_seq.nextval;
-END uzivatel_gen_PK;
-/
-	       
--- trigger pro komentare. Komentar od neovereneho hosta nebude prijat a vynuluje se.
-CREATE OR REPLACE TRIGGER recenze_komentar_integrity
-BEFORE INSERT ON recenze
-FOR EACH ROW
-declare status varchar(3);
-BEGIN
-IF (:new.komentar IS NOT NULL) THEN
-select distinct overeny_uzivatel into status FROM host WHERE uzivatel = :new.host;
-if status = 'ne' then
-:new.komentar := NULL;
-end if;
-END IF;
-END recenze_komentar_integrity;
-/
-	       
--- DVE PROCEDURY
--- 
 	       
 /* dokumentace link: https://www.overleaf.com/2176643837xxcrwtmhwxzs */
 
