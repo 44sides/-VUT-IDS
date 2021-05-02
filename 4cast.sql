@@ -151,7 +151,7 @@ END recenze_komentar_integrity;
 /
 
 -- DVE PROCEDURY
--- Nejdrazsi pobyt urciteho hostu, ktery se uskutecnil.
+-- Nejdrazsi pobyt urciteho hosta, ktery se uskutecnil.
 CREATE OR REPLACE PROCEDURE nejdrazsi_pobyt_hostu (host_id in INT)
     IS 
     CURSOR kurz IS SELECT distinct r.host, u.cena_za_noc, o.datum_od, o.datum_do, o.sleva, p.uskutocnil_se, p.pobyt_num 
@@ -314,9 +314,9 @@ INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-12-22', DATE '2022-1-1', 0, 3, 5)
 INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-3-5', DATE '2021-3-8', 0, 4, 4);
 INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-3-9', DATE '2021-3-12', 0, 4, 5);
 -- aplikace slevy 50% k rezervaci 2.
---exec discount_application(2, 50);
---select distinct r.rezervace_id, r.suma, o.sleva from rezervace r LEFT JOIN obdobi o on r.rezervace_id = o.rezervace_num where r.rezervace_id = 2; -- Sleva je aplikovana a hodnota slevy je aktualizovana.
- -- aplikace slevy 13.5% k rezervaci 4.
+exec discount_application(2, 50);
+select distinct r.rezervace_id, r.suma, o.sleva from rezervace r LEFT JOIN obdobi o on r.rezervace_id = o.rezervace_num where r.rezervace_id = 2; -- Sleva je aplikovana a hodnota slevy je aktualizovana.
+-- aplikace slevy 13.5% k rezervaci 4.
 --exec discount_application(4, '13,5');
 --select distinct r.rezervace_id, r.suma, o.sleva from rezervace r LEFT JOIN obdobi o on r.rezervace_id = o.rezervace_num where r.rezervace_id = 4; -- Sleva je aplikovana a hodnota slevy je nastavena.
 --CHYBA: Chybna hodnota procenta--
@@ -335,16 +335,20 @@ INSERT INTO recenze VALUES (DEFAULT, 5, 7, 'byla to nezapomenutelná párty a vi
 --insert into pobyt
 INSERT INTO pobyt VALUES (DEFAULT, 5, 1, DATE '2021-4-5', DATE '2021-4-8', 'kartou', 'ano' ); -- host 5. (47.25). Drazsi pobyt. 
 INSERT INTO pobyt VALUES (DEFAULT, 5, 2, DATE '2021-10-1', DATE '2021-10-2', 'hotovosť', 'ano' ); -- host 5. (40).
---exec  nejdrazsi_pobyt_hostu(5);
 INSERT INTO pobyt VALUES (DEFAULT, 6, 5, DATE '2021-12-22', DATE '2022-1-1', 'šek', 'ano' ); -- host 6 ma jeden pobyt.
-
 INSERT INTO pobyt VALUES (DEFAULT, 7, 4, DATE '2021-3-5', DATE '2021-3-8', 'ne', 'ano' ); -- host 7. (600). Drazsi pobyt, protoze se uskutecnil.
 INSERT INTO pobyt VALUES (DEFAULT, 7, 5, DATE '2021-3-9', DATE '2021-3-12', 'kartou', 'ne' ); -- host 7. (1500).
+--exec  nejdrazsi_pobyt_hostu(5);
+-- uspesne vykonani procedury
+
 --exec  nejdrazsi_pobyt_hostu(7);
 --CHYBA: Host nema pobyty, ktere se uskutecnily--
+
 --exec  nejdrazsi_pobyt_hostu(9);
 --CHYBA: Host s danym ID neexistuje--ID patri pronajimateli.
+
 --exec  nejdrazsi_pobyt_hostu(1);
+
 
 /* dokumentace link: https://www.overleaf.com/2176643837xxcrwtmhwxzs */
 
@@ -378,6 +382,34 @@ SQL skript v poslední části projektu musí obsahovat vše z následujících
 5. Dokumentace popisující finální schéma databáze – Dokumentace popisující řešení ze skriptu v bodě 4 vč. jejich zdůvodnění 
     (např. popisuje výstup příkazu EXPLAIN PLAN bez indexu, důvod vytvoření zvoleného indexu, a výstup EXPLAIN PLAN s indexem, atd.).
 */
+-- EXPLAIN PLAN
+
+-- neoptimalizovany dotaz, ktory najde najdrahšiu rezerváciu použivatela Jan Novák
+EXPLAIN PLAN FOR
+SELECT DISTINCT
+    u.jmeno, u.prijmeni, max(r.suma)
+FROM
+    rezervace r LEFT JOIN uzivatel u ON r.host = u.ucet_id
+WHERE prijmeni = 'Novak' AND jmeno = 'Jan'
+GROUP BY u.jmeno, u.prijmeni;
+
+SELECT * FROM TABLE(dbms_xplan.display);
+
+-- optimalizovany dotaz s použitím indexu
+
+DROP INDEX custom_index;
+CREATE INDEX custom_index ON uzivatel(jmeno, prijmeni);
+
+EXPLAIN PLAN FOR
+SELECT DISTINCT
+    u.jmeno, u.prijmeni, max(r.suma)
+FROM
+    rezervace r LEFT JOIN uzivatel u ON r.host = u.ucet_id
+WHERE prijmeni = 'Novak' AND jmeno = 'Jan'
+GROUP BY u.jmeno, u.prijmeni;
+
+SELECT * FROM TABLE(dbms_xplan.display);
+
 
 -- udelenie opravnení od autora tabuliek va databáze (xfindr00) pre druhého člena týmu (xtverd01)
 GRANT ALL ON recenze TO xtverd01;
@@ -389,10 +421,17 @@ GRANT ALL ON uzivatel TO xtverd01;
 GRANT ALL ON pronajimatel TO xtverd01;
 GRANT ALL ON ubytovani TO xtverd01;
 
+GRANT EXECUTE ON nejdrazsi_pobyt_hostu TO xtverd01;
+GRANT EXECUTE ON discount_application TO xtverd01;
 
 --materialized view
-CREATE MATERIALIZED VIEW zeme_sk AS 
-	SELECT *
+CREATE MATERIALIZED VIEW zeme_sk 
+    NOLOGGING
+    CACHE
+    BUILD IMMEDIATE
+    REFRESH ON COMMIT
+
+AS SELECT *
     	FROM ubytovani U WHERE U.zeme = 'Slovensko';
 
 GRANT ALL ON zeme_sk TO xtverd01;
