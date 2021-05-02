@@ -396,8 +396,6 @@ GROUP BY u.jmeno, u.prijmeni;
 SELECT * FROM TABLE(dbms_xplan.display);
 
 -- optimalizovany dotaz s použitím indexu
-
-DROP INDEX custom_index;
 CREATE INDEX custom_index ON uzivatel(jmeno, prijmeni);
 
 EXPLAIN PLAN FOR
@@ -410,6 +408,7 @@ GROUP BY u.jmeno, u.prijmeni;
 
 SELECT * FROM TABLE(dbms_xplan.display);
 
+DROP INDEX custom_index;
 
 -- udelenie opravnení od autora tabuliek va databáze (xfindr00) pre druhého člena týmu (xtverd01)
 GRANT ALL ON recenze TO xtverd01;
