@@ -272,7 +272,7 @@ INSERT INTO uzivatel VALUES (DEFAULT, 'Jerguš', 'Chudobný','420213008', 'Mests
 INSERT INTO uzivatel VALUES (15, 'Ivan', 'Bohatý','340608010', 'Jarná 8 Prešov', '420999666333'); -- id ma byt 7 diky triggeru
 INSERT INTO uzivatel VALUES (DEFAULT, 'Samuel', 'Čierny','8511250154', 'Jarná 8 Prešov', '420111222111');
 INSERT INTO uzivatel VALUES (DEFAULT, 'Adam', 'Modrý','9702110253', 'Jesenná 585 Žilina', '421555444212');
---select ucet_id from uzivatel;
+select ucet_id from uzivatel;
 	       
 --insert into pronajimatel
 INSERT INTO pronajimatel VALUES (1, 'ziadne', 'vyborna', 'minuty');
@@ -317,20 +317,20 @@ INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-3-9', DATE '2021-3-12', 0, 4, 5);
 exec discount_application(2, 50);
 select distinct r.rezervace_id, r.suma, o.sleva from rezervace r LEFT JOIN obdobi o on r.rezervace_id = o.rezervace_num where r.rezervace_id = 2; -- Sleva je aplikovana a hodnota slevy je aktualizovana.
 -- aplikace slevy 13.5% k rezervaci 4.
---exec discount_application(4, '13,5');
---select distinct r.rezervace_id, r.suma, o.sleva from rezervace r LEFT JOIN obdobi o on r.rezervace_id = o.rezervace_num where r.rezervace_id = 4; -- Sleva je aplikovana a hodnota slevy je nastavena.
+exec discount_application(4, '13,5');
+select distinct r.rezervace_id, r.suma, o.sleva from rezervace r LEFT JOIN obdobi o on r.rezervace_id = o.rezervace_num where r.rezervace_id = 4; -- Sleva je aplikovana a hodnota slevy je nastavena.
 --CHYBA: Chybna hodnota procenta--
---exec discount_application(2, 150);
+exec discount_application(2, 150);
 --CHYBA: Rezervace s danym ID neexistuje--
---exec discount_application(55, 15);
+exec discount_application(55, 15);
 
 --insert into recenze	       
---select uzivatel, overeny_uzivatel from host; --seznam vsech hostu.
+select uzivatel, overeny_uzivatel from host; --seznam vsech hostu.
 INSERT INTO recenze VALUES (DEFAULT, 1, 5, 'vyborne, som uplne spokojny', '5'); -- komentar od overeneho hosta.
 INSERT INTO recenze VALUES (DEFAULT, 2, 5, 'priemerne ubytovanie', '3'); -- komentar od overeneho hosta.
 INSERT INTO recenze VALUES (DEFAULT, 5, 6, 'za tu cenu to nestoji', '2'); -- komentar od overeneho hosta.
 INSERT INTO recenze VALUES (DEFAULT, 5, 7, 'byla to nezapomenutelná párty a vila byla na to ideální', '10'); -- komentar od neovereneho hosta. Komentar bude vynulovan.
---select host, komentar from recenze; -- seznam vsech komentaru.
+select host, komentar from recenze; -- seznam vsech komentaru.
 
 --insert into pobyt
 INSERT INTO pobyt VALUES (DEFAULT, 5, 1, DATE '2021-4-5', DATE '2021-4-8', 'kartou', 'ano' ); -- host 5. (47.25). Drazsi pobyt. 
@@ -338,16 +338,13 @@ INSERT INTO pobyt VALUES (DEFAULT, 5, 2, DATE '2021-10-1', DATE '2021-10-2', 'ho
 INSERT INTO pobyt VALUES (DEFAULT, 6, 5, DATE '2021-12-22', DATE '2022-1-1', 'šek', 'ano' ); -- host 6 ma jeden pobyt.
 INSERT INTO pobyt VALUES (DEFAULT, 7, 4, DATE '2021-3-5', DATE '2021-3-8', 'ne', 'ano' ); -- host 7. (600). Drazsi pobyt, protoze se uskutecnil.
 INSERT INTO pobyt VALUES (DEFAULT, 7, 5, DATE '2021-3-9', DATE '2021-3-12', 'kartou', 'ne' ); -- host 7. (1500).
---exec  nejdrazsi_pobyt_hostu(5);
+exec  nejdrazsi_pobyt_hostu(5);
 -- uspesne vykonani procedury
-
---exec  nejdrazsi_pobyt_hostu(7);
+exec  nejdrazsi_pobyt_hostu(7);
 --CHYBA: Host nema pobyty, ktere se uskutecnily--
-
---exec  nejdrazsi_pobyt_hostu(9);
+exec  nejdrazsi_pobyt_hostu(9);
 --CHYBA: Host s danym ID neexistuje--ID patri pronajimateli.
-
---exec  nejdrazsi_pobyt_hostu(1);
+exec  nejdrazsi_pobyt_hostu(1);
 
 
 /* dokumentace link: https://www.overleaf.com/2176643837xxcrwtmhwxzs */
@@ -363,10 +360,6 @@ Zadanie:
 
 SQL skript v poslední části projektu musí obsahovat vše z následujících
 
-    explicitní vytvoření alespoň jednoho indexu tak, aby pomohl optimalizovat zpracování dotazů, přičemž musí být uveden 
-    také příslušný dotaz, na který má index vliv, a v dokumentaci popsán způsob využití indexu v tomto dotazy 
-    (toto lze zkombinovat s EXPLAIN PLAN, vizte dále),
-
     alespoň jedno použití EXPLAIN PLAN pro výpis plánu provedení databazového dotazu se spojením alespoň dvou tabulek,
     agregační funkcí a klauzulí GROUP BY, přičemž v dokumentaci musí být srozumitelně popsáno, jak proběhne dle toho výpisu
     plánu provedení dotazu, vč. objasnění použitých prostředků pro jeho urychlení (např. použití indexu, druhu spojení, atp.), 
@@ -374,16 +367,11 @@ SQL skript v poslední části projektu musí obsahovat vše z následujících
     způsob proveden (např. vytvořen index), zopakován EXPLAIN PLAN a jeho výsledek porovnán s výsledkem před provedením navrženého 
     způsobu urychlení,
 
-    definici přístupových práv k databázovým objektům pro druhého člena týmu,
-    vytvořen alespoň jeden materializovaný pohled patřící druhému členu týmu a používající tabulky definované prvním členem týmu 
-    (nutno mít již definována přístupová práva), vč. SQL příkazů/dotazů ukazujících, jak materializovaný pohled funguje,
-
-
 5. Dokumentace popisující finální schéma databáze – Dokumentace popisující řešení ze skriptu v bodě 4 vč. jejich zdůvodnění 
     (např. popisuje výstup příkazu EXPLAIN PLAN bez indexu, důvod vytvoření zvoleného indexu, a výstup EXPLAIN PLAN s indexem, atd.).
 */
--- EXPLAIN PLAN
 
+-- EXPLAIN PLAN
 -- neoptimalizovany dotaz, ktory najde najdrahšiu rezerváciu použivatela Jan Novák
 EXPLAIN PLAN FOR
 SELECT DISTINCT
@@ -419,18 +407,26 @@ GRANT ALL ON host TO xtverd01;
 GRANT ALL ON uzivatel TO xtverd01;
 GRANT ALL ON pronajimatel TO xtverd01;
 GRANT ALL ON ubytovani TO xtverd01;
-
 GRANT EXECUTE ON nejdrazsi_pobyt_hostu TO xtverd01;
 GRANT EXECUTE ON discount_application TO xtverd01;
 
---materialized view
-CREATE MATERIALIZED VIEW zeme_sk 
-    NOLOGGING
+--MATERIALIZED VIEW
+CREATE MATERIALIZED VIEW zeme_sk
     CACHE
     BUILD IMMEDIATE
     REFRESH ON COMMIT
+AS SELECT zeme, mesto, cena_za_noc
+    	FROM ubytovani WHERE zeme = 'Slovensko';
 
-AS SELECT *
-    	FROM ubytovani U WHERE U.zeme = 'Slovensko';
+GRANT ALL ON zeme_sk TO xtverd01;-- materializovany pohled patri druhemu clenu (xtverd01)
 
-GRANT ALL ON zeme_sk TO xtverd01;
+-- vystup materializovaneho pohledu
+SELECT * FROM zeme_sk;
+-- aktualizace atributu tabulky, ktera se nachazi v pohledu
+UPDATE ubytovani SET cena_za_noc = 666 WHERE mesto = 'Margecany';
+-- vysledek neni
+SELECT * FROM zeme_sk;
+-- aktualizujeme pohled specialnim prikazem
+COMMIT;
+-- vysledek je
+SELECT * FROM zeme_sk;
