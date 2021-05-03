@@ -209,7 +209,7 @@ BEGIN
 END;
 /
 
--- Aplikace procentni slevy k urcite sume rezervace s aktualizaci dat.
+-- Aplikace pricentni slevy k urcite sume rezervace s aktualizaci dat.
 CREATE OR REPLACE PROCEDURE discount_application(rez_id in INT, procento rezervace.suma%TYPE)
     IS 
     CURSOR kurz IS SELECT suma from rezervace where rezervace_id = rez_id;
@@ -320,7 +320,7 @@ INSERT INTO obdobi VALUES (DEFAULT, DATE '2021-3-9', DATE '2021-3-12', 0, 4, 5);
 exec discount_application(2, 50);
 select distinct r.rezervace_id, r.suma, o.sleva from rezervace r LEFT JOIN obdobi o on r.rezervace_id = o.rezervace_num where r.rezervace_id = 2; -- Sleva je aplikovana a hodnota slevy je aktualizovana.
 -- aplikace slevy 13.5% k rezervaci 4.
-exec discount_application(4, '13,5');
+exec discount_application(4, 13.5);
 select distinct r.rezervace_id, r.suma, o.sleva from rezervace r LEFT JOIN obdobi o on r.rezervace_id = o.rezervace_num where r.rezervace_id = 4; -- Sleva je aplikovana a hodnota slevy je nastavena.
 --CHYBA: Chybna hodnota procenta--
 exec discount_application(2, 150);
@@ -349,31 +349,6 @@ exec  nejdrazsi_pobyt_hostu(9);
 --CHYBA: Host s danym ID neexistuje--ID patri pronajimateli.
 exec  nejdrazsi_pobyt_hostu(1);
 
-
-/* dokumentace link: https://www.overleaf.com/2176643837xxcrwtmhwxzs */
-
-/*
-Zadanie:
-4. SQL skript pro vytvoření pokročilých objektů schématu databáze – SQL skript, který nejprve vytvoří 
-    základní objekty schéma databáze a naplní tabulky ukázkovými daty (stejně jako skript v bodě 2),
-    a poté zadefinuje či vytvoří pokročilá omezení či objekty databáze dle upřesňujících požadavků zadání.
-    Dále skript bude obsahovat ukázkové příkazy manipulace dat a dotazy demonstrující použití výše zmiňovaných 
-    omezení a objektů tohoto skriptu (např. pro demonstraci použití indexů zavolá nejprve skript EXPLAIN PLAN na dotaz 
-    bez indexu, poté vytvoří index, a nakonec zavolá EXPLAIN PLAN na dotaz s indexem).
-
-SQL skript v poslední části projektu musí obsahovat vše z následujících
-
-    alespoň jedno použití EXPLAIN PLAN pro výpis plánu provedení databazového dotazu se spojením alespoň dvou tabulek,
-    agregační funkcí a klauzulí GROUP BY, přičemž v dokumentaci musí být srozumitelně popsáno, jak proběhne dle toho výpisu
-    plánu provedení dotazu, vč. objasnění použitých prostředků pro jeho urychlení (např. použití indexu, druhu spojení, atp.), 
-    a dále musí být navrnut způsob, jak konkrétně by bylo možné dotaz dále urychlit (např. zavedením nového indexu), navržený 
-    způsob proveden (např. vytvořen index), zopakován EXPLAIN PLAN a jeho výsledek porovnán s výsledkem před provedením navrženého 
-    způsobu urychlení,
-
-5. Dokumentace popisující finální schéma databáze – Dokumentace popisující řešení ze skriptu v bodě 4 vč. jejich zdůvodnění 
-    (např. popisuje výstup příkazu EXPLAIN PLAN bez indexu, důvod vytvoření zvoleného indexu, a výstup EXPLAIN PLAN s indexem, atd.).
-*/
-
 -- EXPLAIN PLAN
 -- neoptimalizovany dotaz, ktory najde najdrahšiu rezerváciu použivatela Jan Novák
 EXPLAIN PLAN FOR
@@ -399,7 +374,7 @@ GROUP BY u.jmeno, u.prijmeni;
 
 SELECT * FROM TABLE(dbms_xplan.display);
 
--- udelenie opravnení od autora tabuliek va databáze (xfindr00) pre druhého člena týmu (xtverd01)
+-- udelenie opravnení od autora tabuliek v databáze (xfindr00) pre druhého člena týmu (xtverd01)
 GRANT ALL ON recenze TO xtverd01;
 GRANT ALL ON obdobi TO xtverd01;
 GRANT ALL ON rezervace TO xtverd01;
@@ -408,10 +383,12 @@ GRANT ALL ON host TO xtverd01;
 GRANT ALL ON uzivatel TO xtverd01;
 GRANT ALL ON pronajimatel TO xtverd01;
 GRANT ALL ON ubytovani TO xtverd01;
+
+-- udelenie oprvaneni na použitie procedur
 GRANT EXECUTE ON nejdrazsi_pobyt_hostu TO xtverd01;
 GRANT EXECUTE ON discount_application TO xtverd01;
 
---MATERIALIZED VIEW
+-- MATERIALIZED VIEW
 CREATE MATERIALIZED VIEW zeme_sk
     CACHE
     BUILD IMMEDIATE
