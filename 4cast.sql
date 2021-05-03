@@ -16,6 +16,9 @@ DROP SEQUENCE uzivatel_seq;
 -- drop materialized view
 DROP MATERIALIZED VIEW zeme_sk;
 
+-- drop index
+DROP INDEX custom_index;
+
 ------- 2. část -------
 -- drop tables
 DROP TABLE doporuceni CASCADE CONSTRAINTS;
@@ -395,8 +398,6 @@ WHERE prijmeni = 'Novak' AND jmeno = 'Jan'
 GROUP BY u.jmeno, u.prijmeni;
 
 SELECT * FROM TABLE(dbms_xplan.display);
-
-DROP INDEX custom_index;
 
 -- udelenie opravnení od autora tabuliek va databáze (xfindr00) pre druhého člena týmu (xtverd01)
 GRANT ALL ON recenze TO xtverd01;
