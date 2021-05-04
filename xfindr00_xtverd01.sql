@@ -209,7 +209,7 @@ BEGIN
 END;
 /
 
--- Aplikace pricentni slevy k urcite sume rezervace s aktualizaci dat.
+-- Aplikace pricteni slevy k urcite sume rezervace s aktualizaci dat.
 CREATE OR REPLACE PROCEDURE discount_application(rez_id in INT, procento rezervace.suma%TYPE)
     IS 
     CURSOR kurz IS SELECT suma from rezervace where rezervace_id = rez_id;
